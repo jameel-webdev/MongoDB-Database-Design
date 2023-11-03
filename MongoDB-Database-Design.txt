@@ -1,0 +1,118 @@
+// Design database for Zen class programme
+users
+{
+  "_id": ObjectId("614f9c373d8a95a2e44e0c1a"),
+  "name": "jaden",
+  "email": "jaden@example.com",
+  "phone": "1234567890",
+  "date_of_birth": Date("1992-04-26"),
+  "address": "31st, City, Country"
+  
+}
+
+codekata
+{
+  "_id": ObjectId("614f9c373d8a95a2e44e0c1b"),
+  "user_id": ObjectId("614f9c373d8a95a2e44e0c1a"),
+  "date": Date("2023-05-01"),
+  "problems_solved": 10
+  
+}
+
+attendance
+{
+  "_id": ObjectId("614f9c373d8a95a2e44e0c1c"),
+  "user_id": ObjectId("614f9c373d8a95a2e44e0c1a"),
+  "date": Date("2023-05-19"),
+  "is_present": true
+  
+}
+
+topics
+{
+  "_id": ObjectId("614f9c373d8a95a2e44e0c1d"),
+  "name": "Mongosh",
+  "description": "Overview of Monogo commands",
+  
+}
+
+tasks
+{
+  "_id": ObjectId("614f9c373d8a95a2e44e0c1e"),
+  "user_id": ObjectId("614f9c373d8a95a2e44e0c1a"),
+  "date": Date("2023-05-01"),
+  "task_description": "exercise 1",
+  "is_submitted": true
+ 
+}
+
+company_drives
+{
+  "_id": ObjectId("614f9c373d8a95a2e44e0c1f"),
+  "date": Date("2023-05-15"),
+  "company_name": "Guvi",
+  "drive_description": "Placement drive for software engineers",
+  
+}
+
+mentors
+{
+  "_id": ObjectId("614f9c373d8a95a2e44e0c20"),
+  "name": "Sanjay",
+  "email": "sanjay.guvi@example.com",
+  "phone": "9876543210",
+  
+}
+
+
+1.Find all the topics and tasks which are thought in the month of October
+-db.topics.find({ "date": { "$gte": Date("2023-10-01"), "$lte": Date("2023-10-31") } })
+-db.tasks.find({ "date": { "$gte": Date("2023-10-01"), "$lte": Date("2023-10-31") } })
+
+2.Find all the company drives which appeared between 15 oct-2020 and 31-oct-2020
+-db.company_drives.find({ "date": { "$gte": Date("2020-10-15"), "$lte": Date("2020-10-31") } })
+
+3.Find all the company drives and students who are appeared for the placement.
+-db.company_drives.aggregate([
+  { "$lookup": {
+    "from": "users",
+    "localField": "_id",
+    "foreignField": "company_drive_id",
+    "as": "students"
+  }}
+])
+
+4.Find the number of problems solved by the user in codekata
+-db.codekata.aggregate([
+  { "$match": { "user_id": ObjectId("614f9c373d8a95a2e44e0c1a") } },
+  { "$group": {
+    "_id": "$user_id",
+    "total_problems_solved": { "$sum": "$problems_solved" }
+  }}
+])
+
+5.Find all the mentors with who has the mentee's count more than 15
+-db.mentors.aggregate([
+  { "$lookup": {
+    "from": "users",
+    "localField": "_id",
+    "foreignField": "mentor_id",
+    "as": "mentees"
+  }},
+  { "$match": { "mentees": { "$size": { "$gt": 15 } } } }
+])
+
+6.Find the number of users who are absent and task is not submitted  between 15 oct-2020 and 31-oct-2020
+-db.attendance.aggregate([
+  { "$lookup": {
+    "from": "tasks",
+    "localField": "user_id",
+    "foreignField": "user_id",
+    "as": "user_tasks"
+  }},
+  { "$match": {
+    "date": { "$gte": Date("2020-10-15"), "$lte": Date("2020-10-31") },
+    "is_present": false,
+    "user_tasks.is_submitted": false
+  }}
+])
